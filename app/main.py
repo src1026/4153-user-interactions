@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import user_iteraction_router
+from app.routers import user_interaction_router
 
 app = FastAPI()
 
