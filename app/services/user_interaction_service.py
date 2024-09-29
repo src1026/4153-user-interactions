@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models.user_interaction import Like, Comment, Follow
+from app.models.user_actions import Like, Comment, Follow
 from app.services.database import get_db
 
 class UserInteractionService:
