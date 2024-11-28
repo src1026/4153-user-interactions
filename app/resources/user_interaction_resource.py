@@ -1,4 +1,3 @@
-from typing import List, Optional
 from app.models.user_actions import Like, Comment, Follow
 from app.services.service_factory import ServiceFactory
 

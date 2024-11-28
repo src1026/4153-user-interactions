@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from app.resources.user_interaction_resource import UserInteractionResource
 from app.models.user_actions import Like, Comment, Follow
 
@@ -6,7 +6,7 @@ router = APIRouter()
 resource = UserInteractionResource()
 
 @router.post("/like/", status_code=201)
-async def like_recipe(like_data: Like, db: Session = Depends(get_db)):
+async def like_recipe(like_data: Like):
     like = resource.add_like(like_data.dict())
     return {
         "message": "Recipe liked successfully",
@@ -45,7 +45,7 @@ async def delete_comment(comment_id: int):
     return {"message": "Comment deleted successfully"}
     
 @router.post("/follow/", status_code=201)
-async def follow_user(follow_data: Follow, db: Session = Depends(get_db)):
+async def follow_user(follow_data: Follow):
     follow = resource.follow_user(follow_data.dict())
     return {
         "message": "User followed successfully",
@@ -54,7 +54,7 @@ async def follow_user(follow_data: Follow, db: Session = Depends(get_db)):
     }
 
 @router.delete("/follow/{follower_id}/{following_id}")
-async def unfollow_user(follower_id: int, following_id: int, db: Session = Depends(get_db)):
+async def unfollow_user(follower_id: int, following_id: int):
     success = resource.unfollow_user(follower_id, following_id)
     if not success:
         raise HTTPException(status_code=404, detail="Follow relationship not found")

@@ -1,4 +1,3 @@
-from app.resources.user_interaction_resource import UserInteractionResource
 from framework.services.data_access.MySQLRDBDataService import MySQLRDBDataService
 
 class ServiceFactory:
