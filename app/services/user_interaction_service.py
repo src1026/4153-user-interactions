@@ -1,23 +1,24 @@
-from sqlalchemy.orm import Session
-from app.models.user_actions import Like, Comment, Follow
-from app.services.database import get_db
+class UserInteractionDataService:
+    def __init__(self, db_context):
+        self.db = MySQLRDBDataService(context=db_context)
 
-class UserInteractionService:
+    def create_comment(self, comment_data: dict) -> dict:
+        return self.db.insert("comments", comment_data)
 
-    def like_recipe(self, db: Session, user_id: int, recipe_id: int):
-        like = Like(user_id=user_id, recipe_id=recipe_id)
-        db.add(like)
-        db.commit()
-        return like
+    def update_comment(self, comment_id: int, updated_data: dict) -> dict:
+        return self.db.update("comments", key="comment_id", value=comment_id, data=updated_data)
 
-    def comment_on_recipe(self, db: Session, comment_data: dict):
-        comment = Comment(**comment_data)
-        db.add(comment)
-        db.commit()
-        return comment
+    def delete_comment(self, comment_id: int) -> bool:
+        return self.db.delete("comments", key="comment_id", value=comment_id)
 
-    def follow_user(self, db: Session, follower_id: int, following_id: int):
-        follow = Follow(follower_id=follower_id, following_id=following_id)
-        db.add(follow)
-        db.commit()
-        return follow
+    def create_like(self, like_data: dict) -> dict:
+        return self.db.insert("likes", like_data)
+
+    def delete_like(self, user_id: int, recipe_id: int) -> bool:
+        return self.db.delete("likes", conditions={"user_id": user_id, "recipe_id": recipe_id})
+
+    def create_follow(self, follow_data: dict) -> dict:
+        return self.db.insert("follows", follow_data)
+
+    def delete_follow(self, follower_id: int, following_id: int) -> bool:
+        return self.db.delete("follows", conditions={"follower_id": follower_id, "following_id": following_id})
