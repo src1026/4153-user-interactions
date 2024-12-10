@@ -1,9 +1,19 @@
-from app.models.user_actions import Like, Comment, Follow
-from app.services.service_factory import ServiceFactory
+from app.models.user_actions import Like, Comment, Follow, User
+from typing import List
+
 
 class UserInteractionResource:
-    def __init__(self):
-        self.data_service = ServiceFactory.get_service("UserInteractionDataService")
+    def __init__(self, data_service_factory):
+        self._data_service_factory = data_service_factory
+        self._data_service = None  # Lazy initialization
+
+    @property
+    def data_service(self):
+        # Initialize the data service only when accessed
+        if self._data_service is None:
+            self._data_service = self._data_service_factory()
+            print(f"Initialized data_service: {self._data_service}")
+        return self._data_service
 
     def add_comment(self, comment_data: dict) -> Comment:
         comment = self.data_service.create_comment(comment_data)
@@ -29,3 +39,25 @@ class UserInteractionResource:
 
     def unfollow_user(self, follower_id: int, following_id: int) -> bool:
         return self.data_service.delete_follow(follower_id, following_id)
+
+
+    def create_user(self, user_data: dict) -> User:
+        user = self.data_service.create_user(user_data)
+        return User(**user)
+
+    def get_user(self, user_id: int) -> User:
+        user = self.data_service.get_user_by_id(user_id)
+        if not user:
+            raise ValueError("User not found")
+        return User(**user)
+
+    def validate_user(self, user_id: int) -> bool:
+        user = self.data_service.get_user_by_id(user_id)
+        return bool(user)
+
+    def get_created_recipes(self, user_id: int) -> List[dict]:
+        return self.data_service.get_recipes_created_by_user(user_id)
+
+    def get_liked_recipes(self, user_id: int) -> List[dict]:
+        return self.data_service.get_recipes_liked_by_user(user_id)
+

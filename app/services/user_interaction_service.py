@@ -1,6 +1,6 @@
 class UserInteractionDataService:
-    def __init__(self, db_context):
-        self.db = MySQLRDBDataService(context=db_context)
+    def __init__(self, db):
+        self.db = db
 
     def create_comment(self, comment_data: dict) -> dict:
         return self.db.insert("comments", comment_data)

@@ -47,3 +47,25 @@ class Follow(BaseModel):
                 "following_id": 2
             }
         }
+
+class User(BaseModel):
+    user_id: int
+    username: str
+    email: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    bio: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "user_id": 1,
+                "username": "jigglypuff",
+                "email": "jigglypuff@example.com",
+                "created_at": "2024-01-01T12:00:00",
+                "updated_at": "2024-01-02T15:30:00",
+                "bio": "I love sharing my cooking experiments!",
+                "avatar_url": "https://example.com/avatar.jpg"
+            }
+        }

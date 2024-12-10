@@ -1,9 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends
 from app.resources.user_interaction_resource import UserInteractionResource
 from app.models.user_actions import Like, Comment, Follow
+from app.services.service_factory import ServiceFactory
+from app.models.user_actions import User
 
+def data_service_factory():
+    return ServiceFactory.get_service("UserInteractionDataService")
+resource = UserInteractionResource(data_service_factory=data_service_factory)
 router = APIRouter()
-resource = UserInteractionResource()
 
 @router.post("/like/", status_code=201)
 async def like_recipe(like_data: Like):
@@ -59,3 +63,22 @@ async def unfollow_user(follower_id: int, following_id: int):
     if not success:
         raise HTTPException(status_code=404, detail="Follow relationship not found")
     return {"message": "User unfollowed successfully"}
+
+@router.post("/users/", status_code=201)
+async def create_user(user_data: User):
+    try:
+        user = resource.create_user(user_data.dict())
+        return {
+            "message": "User created successfully",
+            "data": user,
+            "Location": f"/users/{user.user_id}"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/users/{user_id}", response_model=User)
+async def get_user(user_id: int):
+    try:
+        return resource.get_user(user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))

@@ -1,10 +1,9 @@
 import pymysql
 from .BaseDataService import DataDataService
 
-
 class MySQLRDBDataService(DataDataService):
     """
-    A generic data service for MySQL databases. The class implement common
+    A generic data service for MySQL databases. The class implements common
     methods from BaseDataService and other methods for MySQL. More complex use cases
     can subclass, reuse methods and extend.
     """
@@ -13,7 +12,8 @@ class MySQLRDBDataService(DataDataService):
         super().__init__(context)
 
     def _get_connection(self):
-        connection = pymysql.connect(
+        """Establishes a connection to the MySQL database."""
+        return pymysql.connect(
             host=self.context["host"],
             port=self.context["port"],
             user=self.context["user"],
@@ -21,35 +21,91 @@ class MySQLRDBDataService(DataDataService):
             cursorclass=pymysql.cursors.DictCursor,
             autocommit=True
         )
-        return connection
 
-    def get_data_object(self,
-                        database_name: str,
-                        collection_name: str,
-                        key_field: str,
-                        key_value: str):
+    def get_data_object(self, database_name: str, collection_name: str, key_field: str, key_value: str):
         """
-        See base class for comments.
+        Fetch a single data object by its key.
+
+        :param database_name: Name of the database.
+        :param collection_name: Name of the table/collection.
+        :param key_field: Name of the key field.
+        :param key_value: Value of the key field.
+        :return: A single row matching the key, or None if not found.
         """
-
-        connection = None
-        result = None
-
         try:
-            sql_statement = f"SELECT * FROM {database_name}.{collection_name} " + \
-                        f"where {key_field}=%s"
-            connection = self._get_connection()
-            cursor = connection.cursor()
-            cursor.execute(sql_statement, [key_value])
-            result = cursor.fetchone()
+            sql_statement = f"SELECT * FROM {database_name}.{collection_name} WHERE {key_field}=%s"
+            with self._get_connection() as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql_statement, [key_value])
+                    result = cursor.fetchone()
+            return result
         except Exception as e:
-            if connection:
-                connection.close()
+            # Log the error (you can replace print with a proper logging library)
+            print(f"Error fetching data object: {e}")
+            return None
 
-        return result
+    def insert(self, table: str, data: dict) -> dict:
+        """
+        Insert a new row into the specified table.
 
+        :param table: The name of the table to insert data into.
+        :param data: A dictionary of column names and their corresponding values.
+        :return: The inserted data with the generated primary key (if any).
+        """
+        try:
+            columns = ", ".join(data.keys())
+            placeholders = ", ".join(["%s"] * len(data))
+            sql_statement = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
 
+            with self._get_connection() as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql_statement, list(data.values()))
+                    inserted_id = cursor.lastrowid  # Get the ID of the newly inserted row
+            return {"id": inserted_id, **data}
+        except Exception as e:
+            print(f"Error inserting data into table {table}: {e}")
+            return None
 
+    def update(self, database_name: str, collection_name: str, key_field: str, key_value: str, data: dict) -> bool:
+        """
+        Update a row in the specified table.
 
+        :param database_name: Name of the database.
+        :param collection_name: Name of the table.
+        :param key_field: Key field for identifying the row to update.
+        :param key_value: Value of the key field.
+        :param data: A dictionary of column names and new values.
+        :return: True if the update was successful, False otherwise.
+        """
+        try:
+            set_clause = ", ".join([f"{col}=%s" for col in data.keys()])
+            sql_statement = f"UPDATE {database_name}.{collection_name} SET {set_clause} WHERE {key_field}=%s"
 
+            with self._get_connection() as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql_statement, list(data.values()) + [key_value])
+                    return cursor.rowcount > 0  # Check if any rows were updated
+        except Exception as e:
+            print(f"Error updating data: {e}")
+            return False
 
+    def delete(self, database_name: str, collection_name: str, key_field: str, key_value: str) -> bool:
+        """
+        Delete a row from the specified table.
+
+        :param database_name: Name of the database.
+        :param collection_name: Name of the table.
+        :param key_field: Key field for identifying the row to delete.
+        :param key_value: Value of the key field.
+        :return: True if the row was deleted, False otherwise.
+        """
+        try:
+            sql_statement = f"DELETE FROM {database_name}.{collection_name} WHERE {key_field}=%s"
+
+            with self._get_connection() as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql_statement, [key_value])
+                    return cursor.rowcount > 0  # Check if any rows were deleted
+        except Exception as e:
+            print(f"Error deleting data: {e}")
+            return False

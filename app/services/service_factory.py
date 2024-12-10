@@ -1,17 +1,17 @@
 from framework.services.data_access.MySQLRDBDataService import MySQLRDBDataService
+from app.services.user_interaction_service import UserInteractionDataService
 
 class ServiceFactory:
     @classmethod
     def get_service(cls, service_name: str):
-        if service_name == "UserInteractionDataService":
-            # Replace with actual database credentials or connection pooling
-            context = {
-                "user": "db_user",
-                "password": "secure_password",
-                "host": "db_host",
-                "port": 3306,
-                "database": "user_interactions"
-            }
-            return MySQLRDBDataService(context=context)
+        if service_name == 'UserInteractionDataService':
+            context = dict(
+                user="jigglypuff7",
+                password="Jigglypuff7!",
+                host="jigglypuff7.c7s86kaawl6v.us-east-2.rds.amazonaws.com",
+                port=3306
+            )
+            db_service = MySQLRDBDataService(context=context)
+            return UserInteractionDataService(db=db_service)  # 返回高层服务
         else:
-            raise ValueError(f"Unknown service: {service_name}")
+            raise ValueError(f"Unknown service name: {service_name}")
