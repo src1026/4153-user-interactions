@@ -22,3 +22,12 @@ class UserInteractionDataService:
 
     def delete_follow(self, follower_id: int, following_id: int) -> bool:
         return self.db.delete("follows", conditions={"follower_id": follower_id, "following_id": following_id})
+
+    def create_user(self, user_data: dict) -> dict:
+        """
+        Insert a new user into the users table.
+
+        :param user_data: Dictionary containing user details (e.g., username, email, etc.)
+        :return: The inserted user data including its generated primary key (id).
+        """
+        return self.db.insert("users", user_data)
