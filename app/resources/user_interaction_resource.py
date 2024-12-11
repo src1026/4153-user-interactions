@@ -14,6 +14,10 @@ class UserInteractionResource:
             self._data_service = self._data_service_factory()
             print(f"Initialized data_service: {self._data_service}")
         return self._data_service
+    
+    def get_comment(self, comment_id: int) -> Comment:
+        comment = self.data_service.get_comment(comment_id)
+        return Comment(**comment)
 
     def add_comment(self, comment_data: dict) -> Comment:
         comment = self.data_service.create_comment(comment_data)
@@ -36,6 +40,8 @@ class UserInteractionResource:
 
     def follow_user(self, follow_data: dict) -> Follow:
         follow = self.data_service.create_follow(follow_data)
+        if not follow:
+            return None
         return Follow(**follow)
 
     def unfollow_user(self, follower_id: int, following_id: int) -> bool:
@@ -47,14 +53,18 @@ class UserInteractionResource:
         return User(**user)
 
     def get_user(self, user_id: int) -> User:
-        user = self.data_service.get_user_by_id(user_id)
+        user = self.data_service.get_user(user_id)
         if not user:
             raise ValueError("User not found")
         return User(**user)
 
     def validate_user(self, user_id: int) -> bool:
-        user = self.data_service.get_user_by_id(user_id)
+        user = self.data_service.get_user(user_id)
         return bool(user)
+    
+    def delete_user(self, user_id: int) -> bool:
+        user = self.data_service.delete_user(user_id)
+        return (user is not None)
 
     def get_created_recipes(self, user_id: int) -> List[dict]:
         return self.data_service.get_recipes_created_by_user(user_id)

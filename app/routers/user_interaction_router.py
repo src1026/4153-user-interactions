@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status, Query
 from app.resources.user_interaction_resource import UserInteractionResource
 from app.models.user_actions import Like, Comment, Follow
 from app.services.service_factory import ServiceFactory
@@ -25,6 +25,24 @@ async def unlike_recipe(user_id: int, recipe_id: int):
         raise HTTPException(status_code=404, detail="Like not found")
     return {"message": "Recipe unliked successfully"}
 
+@router.get("/comment/{comment_id}", response_model=Comment)
+async def get_comment(comment_id: int):
+    result = resource.get_comment(comment_id)
+    if not result:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found")
+
+    if isinstance(result, dict):
+        result = Comment(**result)
+
+    # # HATEOAS
+    # result.links = [
+    #     {"rel": "self", "href": f"/comment/{comment_id}", "method": "GET"},
+    #     {"rel": "update", "href": f"/comment/{comment_id}", "method": "PUT"},
+    #     {"rel": "delete", "href": f"/comment/{comment_id}", "method": "DELETE"},
+    #     {"rel": "comments", "href": f"/comment/{comment_id}/comments", "method": "GET"},
+    # ]
+    return result
+
 @router.post("/comment/", status_code=201)
 async def add_comment(comment_data: Comment):
     comment = resource.add_comment(comment_data.dict())
@@ -47,10 +65,14 @@ async def delete_comment(comment_id: int):
     if not success:
         raise HTTPException(status_code=404, detail="Comment not found")
     return {"message": "Comment deleted successfully"}
-    
+
 @router.post("/follow/", status_code=201)
 async def follow_user(follow_data: Follow):
     follow = resource.follow_user(follow_data.dict())
+    if not follow:
+        return {
+            "message": f"User {follow_data.follower_id} already follows {follow_data.following_id}"
+        }
     return {
         "message": "User followed successfully",
         "data": follow,
@@ -82,3 +104,14 @@ async def get_user(user_id: int):
         return resource.get_user(user_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    
+@router.delete("/users/{user_id}")
+async def delete_user(user_id: int):
+    result = resource.delete_user(user_id)
+    if not result:
+        return {
+            "message": f"User {user_id} doesn't exist."
+        }
+    return {
+        "message": f"User {user_id} is deleted successfully."
+    }
