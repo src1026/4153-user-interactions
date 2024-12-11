@@ -25,7 +25,6 @@ class UserInteractionResource:
 
     def update_comment(self, comment_id: int, updated_data: dict) -> Comment:
         comment = self.data_service.update_comment(comment_id, updated_data)
-        print(comment)
         return Comment(**comment)
 
     def delete_comment(self, comment_id: int) -> bool:
@@ -62,9 +61,9 @@ class UserInteractionResource:
         user = self.data_service.get_user(user_id)
         return bool(user)
     
-    def delete_user(self, user_id: int) -> bool:
-        user = self.data_service.delete_user(user_id)
-        return (user is not None)
+    # def delete_user(self, user_id: int) -> bool:
+    #     user = self.data_service.delete_user(user_id)
+    #     return (user is not None)
 
     def get_created_recipes(self, user_id: int) -> List[dict]:
         return self.data_service.get_recipes_created_by_user(user_id)

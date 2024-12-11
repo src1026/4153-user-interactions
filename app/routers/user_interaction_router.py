@@ -105,13 +105,13 @@ async def get_user(user_id: int):
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     
-@router.delete("/users/{user_id}")
-async def delete_user(user_id: int):
-    result = resource.delete_user(user_id)
-    if not result:
-        return {
-            "message": f"User {user_id} doesn't exist."
-        }
-    return {
-        "message": f"User {user_id} is deleted successfully."
-    }
+# @router.delete("/users/{user_id}")
+# async def delete_user(user_id: int):
+#     result = resource.delete_user(user_id)
+#     if not result:
+#         return {
+#             "message": f"User {user_id} doesn't exist."
+#         }
+#     return {
+#         "message": f"User {user_id} is deleted successfully."
+#     }

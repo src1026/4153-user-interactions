@@ -40,5 +40,5 @@ class UserInteractionDataService:
     def get_user(self, user_id: int):
         return self.db.get_data_object("users", conditions={"user_id": user_id})
     
-    def delete_user(self, user_id: int):
-        return self.db.delete("users", conditions={"user_id": user_id})
+    # def delete_user(self, user_id: int):
+    #     return self.db.delete("users", conditions={"user_id": user_id})

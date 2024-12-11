@@ -47,19 +47,6 @@ class MySQLRDBDataService(DataDataService):
             sql_statement = f"SELECT * FROM `{table}` WHERE {filter_clause}"
             with self._get_connection() as connection:
                 with connection.cursor() as cursor:
-
-                    # To inspect database content for debugging
-                    print("-------CHECKPOINT----------")
-                    cursor.execute(f"SELECT * FROM `{table}`")
-                    rows = cursor.fetchall()
-                    if rows:
-                        print("Existing records in the table:")
-                        for row in rows:
-                            print(row)
-                    else:
-                        print("The table is empty.")
-
-
                     cursor.execute(sql_statement)
                     result = cursor.fetchone()
             return result
@@ -78,7 +65,7 @@ class MySQLRDBDataService(DataDataService):
         """
         try:
             # Avoid inserting duplicates (especially in the case of following relations)
-            filter_clause = " AND ".join([f"{key}={value}" for key, value in data.items()])
+            filter_clause = " AND ".join([f"{key}=%s" for key in data.keys()])
             sql_check_duplicate = f"SELECT * FROM `{table}` WHERE {filter_clause}"
 
             columns = ", ".join(data.keys())
@@ -87,12 +74,11 @@ class MySQLRDBDataService(DataDataService):
 
             with self._get_connection() as connection:
                 with connection.cursor() as cursor:
-                    cursor.execute(sql_check_duplicate)
+                    cursor.execute(sql_check_duplicate, list(data.values()))
                     result = cursor.fetchall()
                     if len(result) > 0:
                         print("Duplicated data entry found.")
                         return None
-
                     cursor.execute(sql_statement, list(data.values()))
                     inserted_id = cursor.lastrowid  # Get the ID of the newly inserted row
             return {"id": inserted_id, **data}
@@ -140,15 +126,15 @@ class MySQLRDBDataService(DataDataService):
             with self._get_connection() as connection:
                 with connection.cursor() as cursor:
                     # To inspect database content for debugging
-                    print("-------CHECKPOINT----------")
-                    cursor.execute(f"SELECT * FROM `{table}`")
-                    rows = cursor.fetchall()
-                    if rows:
-                        print("Existing records in the table:")
-                        for row in rows:
-                            print(row)
-                    else:
-                        print("The table is empty.")
+                    # print("-------CHECKPOINT----------")
+                    # cursor.execute(f"SELECT * FROM `{table}`")
+                    # rows = cursor.fetchall()
+                    # if rows:
+                    #     print("Existing records in the table:")
+                    #     for row in rows:
+                    #         print(row)
+                    # else:
+                    #     print("The table is empty.")
                     cursor.execute(sql_statement)
                     return cursor.rowcount > 0  # Check if any rows were deleted
         except Exception as e:

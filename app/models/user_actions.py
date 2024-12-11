@@ -8,7 +8,7 @@ class Like(BaseModel):
     recipe_id: int
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "user_id": 1,
                 "recipe_id": 101
@@ -24,7 +24,7 @@ class Comment(BaseModel):
     updated_at: Optional[datetime] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "comment_id": 1,
                 "user_id": 2,
@@ -40,7 +40,7 @@ class Follow(BaseModel):
     following_id: int
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "follower_id": 1,
                 "following_id": 2
@@ -56,7 +56,7 @@ class User(BaseModel):
     updated_at: Optional[datetime] = Field(None, description="The timestamp when the user was last updated")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "user_id": 1,
                 "email": "jigglypuff@example.com",
