@@ -21,6 +21,7 @@ class UserInteractionResource:
 
     def update_comment(self, comment_id: int, updated_data: dict) -> Comment:
         comment = self.data_service.update_comment(comment_id, updated_data)
+        print(comment)
         return Comment(**comment)
 
     def delete_comment(self, comment_id: int) -> bool:

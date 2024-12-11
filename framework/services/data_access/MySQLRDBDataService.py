@@ -78,45 +78,48 @@ class MySQLRDBDataService(DataDataService):
             print(f"Error inserting data into table {table}: {e}")
             return None
 
-    def update(self, database_name: str, collection_name: str, key_field: str, key_value: str, data: dict) -> bool:
+    def update(self, table: str, key: str, value: int, data: dict) -> bool:
         """
         Update a row in the specified table.
 
         :param database_name: Name of the database.
         :param collection_name: Name of the table.
-        :param key_field: Key field for identifying the row to update.
-        :param key_value: Value of the key field.
+        :param key: Key field for identifying the row to update.
+        :param value: Value of the key field.
         :param data: A dictionary of column names and new values.
-        :return: True if the update was successful, False otherwise.
+        :return: Updated data if the update was successful, None otherwise.
         """
         try:
             set_clause = ", ".join([f"{col}=%s" for col in data.keys()])
-            sql_statement = f"UPDATE {database_name}.{collection_name} SET {set_clause} WHERE {key_field}=%s"
+            sql_statement = f"UPDATE `{table}` SET {set_clause} WHERE {key}={value}"
 
             with self._get_connection() as connection:
                 with connection.cursor() as cursor:
-                    cursor.execute(sql_statement, list(data.values()) + [key_value])
-                    return cursor.rowcount > 0  # Check if any rows were updated
+                    cursor.execute(sql_statement, list(data.values()))
+                    connection.commit()
+                    if data is None:
+                        return None
+                    return data
         except Exception as e:
             print(f"Error updating data: {e}")
-            return False
+            return None
 
-    def delete(self, database_name: str, collection_name: str, key_field: str, key_value: str) -> bool:
+    def delete(self, table: str, key: str, value: int) -> bool:
         """
         Delete a row from the specified table.
 
         :param database_name: Name of the database.
         :param collection_name: Name of the table.
-        :param key_field: Key field for identifying the row to delete.
-        :param key_value: Value of the key field.
+        :param key: Key field for identifying the row to delete.
+        :param value: Value of the key field.
         :return: True if the row was deleted, False otherwise.
         """
         try:
-            sql_statement = f"DELETE FROM {database_name}.{collection_name} WHERE {key_field}=%s"
+            sql_statement = f"DELETE FROM `{table}` WHERE {key}={value}"
 
             with self._get_connection() as connection:
                 with connection.cursor() as cursor:
-                    cursor.execute(sql_statement, [key_value])
+                    cursor.execute(sql_statement)
                     return cursor.rowcount > 0  # Check if any rows were deleted
         except Exception as e:
             print(f"Error deleting data: {e}")
