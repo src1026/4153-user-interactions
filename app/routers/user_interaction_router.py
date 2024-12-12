@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, status, Query
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+import asyncio
+import uuid
 from app.resources.user_interaction_resource import UserInteractionResource
 from app.models.user_actions import Like, Comment, Follow
 from app.services.service_factory import ServiceFactory
@@ -71,7 +73,7 @@ async def delete_comment(comment_id: int):
         raise HTTPException(status_code=404, detail="Comment not found")
     return {"message": "Comment deleted successfully"}
 
-@router.post("/follow/", status_code=202)
+@router.post("/follow/", status_code=201)
 async def follow_user(follow_data: Follow):
     follow = resource.follow_user(follow_data.dict())
     if not follow:
@@ -106,12 +108,25 @@ async def create_user(user_data: User):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/users/{user_id}", response_model=User)
+@router.get("/users/{user_id}", response_model=User, status_code=202)
 async def get_user(user_id: int):
     try:
-        return resource.get_user(user_id)
+        user = resource.get_user(user_id)
+        task_id = uuid.uuid4()
+        asyncio.create_task(placeholder_task())  
+        return JSONResponse(
+            content={
+                "message": "Follower retrieval accepted for processing.",
+                "data": jsonable_encoder(user)
+            },
+            status_code=202,
+            headers={"Location": f"/async-task/{task_id}"}
+        )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    
+async def placeholder_task():
+    await asyncio.sleep(10)
     
 # @router.delete("/users/{user_id}")
 # async def delete_user(user_id: int):

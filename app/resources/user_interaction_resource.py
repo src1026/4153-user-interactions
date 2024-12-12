@@ -46,7 +46,6 @@ class UserInteractionResource:
     def unfollow_user(self, follower_id: int, following_id: int) -> bool:
         return self.data_service.delete_follow(follower_id, following_id)
 
-
     def create_user(self, user_data: dict) -> User:
         user = self.data_service.create_user(user_data)
         return User(**user)
