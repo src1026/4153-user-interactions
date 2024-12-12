@@ -16,3 +16,4 @@ sqlalchemy
 python-jose
 google-auth
 requests
+passlib[bcrypt]

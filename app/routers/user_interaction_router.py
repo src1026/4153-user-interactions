@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.post("/register")
 async def register_user(user_data: dict):
-    service = UserInteractionDataService()
+    service = ServiceFactory.get_service("UserInteractionDataService")
     user = service.register_user(user_data)
 
     # send welcome email to the registered user

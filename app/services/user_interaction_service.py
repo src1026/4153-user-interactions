@@ -9,29 +9,28 @@ class UserInteractionDataService:
         self.logger = logging.getLogger(__name__)
 
     def register_user(self, user_data: dict) -> dict:
-        # validate required fields
-        required_fields = ["name", "email", "password"]
+        required_fields = ["email"]
         for field in required_fields:
             if field not in user_data:
                 raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
 
-        # hash the password
-        hashed_password = bcrypt.hash(user_data["password"])
-        user_data["password"] = hashed_password
-
-        # check if email already exists
-        existing_user = self.data_service.db.get_data_object("users", conditions={"email": user_data["email"]})
+        existing_user = self.db.get_data_object("users", {"email": user_data["email"]})
         if existing_user:
             raise HTTPException(status_code=400, detail="Email already registered")
 
-        # insert the user into the database
-        try:
-            new_user = self.db.insert("users", user_data)
-            self.logger.info(f"User registered successfully: {new_user['user_id']}")
-            return new_user
-        except Exception as e:
-            self.logger.error(f"Error registering user: {e}")
-            raise HTTPException(status_code=500, detail="Internal server error")
+        insert_data = {
+            "email": user_data["email"],
+            "profile_pic": user_data.get("profile_pic", ""),
+            "ranking": user_data.get("ranking", 0),
+            "created_at": user_data.get("created_at"),
+            "updated_at": user_data.get("updated_at"),
+        }
+
+        new_user = self.db.insert("users", insert_data)
+        if not new_user:
+            raise HTTPException(status_code=500, detail="Failed to register user")
+
+        return new_user
 
     def get_comment(self, comment_id: int) -> dict:
         return self.db.get_data_object("comments", conditions={"comment_id": comment_id})

@@ -2,6 +2,12 @@ from framework.services.data_access.MySQLRDBDataService import MySQLRDBDataServi
 from app.services.user_interaction_service import UserInteractionDataService
 
 class ServiceFactory:
+    services = {}
+
+    @classmethod
+    def register_service(cls, name: str, service_callable):
+        cls.services[name] = service_callable
+
     @classmethod
     def get_service(cls, service_name: str):
         if service_name == 'UserInteractionDataService':
