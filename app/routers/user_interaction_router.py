@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends, status, Query
+from fastapi import APIRouter, HTTPException, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 import asyncio
-import uuid
+import smtplib
+from email.mime.text import MIMEText
 from app.resources.user_interaction_resource import UserInteractionResource
 from app.models.user_actions import Like, Comment, Follow
 from app.services.service_factory import ServiceFactory
@@ -93,40 +94,43 @@ async def unfollow_user(follower_id: int, following_id: int):
         raise HTTPException(status_code=404, detail="Follow relationship not found")
     return {"message": "User unfollowed successfully"}
 
-@router.post("/users/", status_code=201)
+# Make sending welcome email an asynchronous background task
+async def send_welcome_email(email: str):
+    await asyncio.sleep(5)  # Simulate delay in email sending
+    msg = MIMEText("Hi! \n Welcome to jigglypuff! Your registration was successful. You can log in now with your email and password.")
+    msg["Subject"] = "Welcome to jigglypuff!"
+    msg["From"] = "no-reply@example.com"
+    msg["To"] = email
+
+    with smtplib.SMTP("smtp.example.com", 587) as server:
+        server.starttls()
+        # server.login("your_email@example.com", "your_password")
+        # server.send_message(msg)
+        print(f"Email sent to {email}")
+
+@router.post("/users/", status_code=202)
 async def create_user(user_data: User):
     try:
         user = resource.create_user(user_data.dict())
+        # Run the task in background
+        send_welcome_email(user.email)
         return JSONResponse(
             content={
                 "message": "User added successfully",
                 "data": jsonable_encoder(user),
             },
-            status_code=201,
+            status_code=202,
             headers={"Link": f"/users/{user.user_id}; rel='self'"}
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/users/{user_id}", response_model=User, status_code=202)
+@router.get("/users/{user_id}", response_model=User)
 async def get_user(user_id: int):
     try:
-        user = resource.get_user(user_id)
-        task_id = uuid.uuid4()
-        asyncio.create_task(placeholder_task())  
-        return JSONResponse(
-            content={
-                "message": "Follower retrieval accepted for processing.",
-                "data": jsonable_encoder(user)
-            },
-            status_code=202,
-            headers={"Location": f"/async-task/{task_id}"}
-        )
+        return resource.get_user(user_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    
-async def placeholder_task():
-    await asyncio.sleep(10)
     
 # @router.delete("/users/{user_id}")
 # async def delete_user(user_id: int):
