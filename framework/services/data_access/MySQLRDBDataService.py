@@ -34,21 +34,20 @@ class MySQLRDBDataService(DataDataService):
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
             self.connection = None
-    def get_data_object(self, database_name: str, collection_name: str, key_field: str, key_value: str):
+    def get_data_object(self, table: str, conditions: dict):
         """
         Fetch a single data object by its key.
 
-        :param database_name: Name of the database.
-        :param collection_name: Name of the table/collection.
-        :param key_field: Name of the key field.
-        :param key_value: Value of the key field.
+        :param table: name of the data table
+        :param conditions: a dictionary containing key-value pair for filtering
         :return: A single row matching the key, or None if not found.
         """
         try:
-            sql_statement = f"SELECT * FROM {database_name}.{collection_name} WHERE {key_field}=%s"
+            filter_clause = " AND ".join([f"{key}={value}" for key, value in conditions.items()])
+            sql_statement = f"SELECT * FROM `{table}` WHERE {filter_clause}"
             with self._get_connection() as connection:
                 with connection.cursor() as cursor:
-                    cursor.execute(sql_statement, [key_value])
+                    cursor.execute(sql_statement)
                     result = cursor.fetchone()
             return result
         except Exception as e:
@@ -65,12 +64,21 @@ class MySQLRDBDataService(DataDataService):
         :return: The inserted data with the generated primary key (if any).
         """
         try:
+            # Avoid inserting duplicates (especially in the case of following relations)
+            filter_clause = " AND ".join([f"{key}=%s" for key in data.keys()])
+            sql_check_duplicate = f"SELECT * FROM `{table}` WHERE {filter_clause}"
+
             columns = ", ".join(data.keys())
             placeholders = ", ".join(["%s"] * len(data))
             sql_statement = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
 
             with self._get_connection() as connection:
                 with connection.cursor() as cursor:
+                    cursor.execute(sql_check_duplicate, list(data.values()))
+                    result = cursor.fetchall()
+                    if len(result) > 0:
+                        print("Duplicated data entry found.")
+                        return None
                     cursor.execute(sql_statement, list(data.values()))
                     inserted_id = cursor.lastrowid  # Get the ID of the newly inserted row
             return {"id": inserted_id, **data}
@@ -78,45 +86,56 @@ class MySQLRDBDataService(DataDataService):
             print(f"Error inserting data into table {table}: {e}")
             return None
 
-    def update(self, database_name: str, collection_name: str, key_field: str, key_value: str, data: dict) -> bool:
+    def update(self, table: str, conditions: dict, data: dict) -> bool:
         """
         Update a row in the specified table.
 
-        :param database_name: Name of the database.
-        :param collection_name: Name of the table.
-        :param key_field: Key field for identifying the row to update.
-        :param key_value: Value of the key field.
+        :param table: name of the data table
+        :param conditions: a dictionary containing key-value pair for filtering
         :param data: A dictionary of column names and new values.
-        :return: True if the update was successful, False otherwise.
+        :return: Updated data if the update was successful, None otherwise.
         """
         try:
             set_clause = ", ".join([f"{col}=%s" for col in data.keys()])
-            sql_statement = f"UPDATE {database_name}.{collection_name} SET {set_clause} WHERE {key_field}=%s"
+            filter_clause = " AND ".join([f"{key}={value}" for key, value in conditions.items()])
+            sql_statement = f"UPDATE `{table}` SET {set_clause} WHERE {filter_clause}"
 
             with self._get_connection() as connection:
                 with connection.cursor() as cursor:
-                    cursor.execute(sql_statement, list(data.values()) + [key_value])
-                    return cursor.rowcount > 0  # Check if any rows were updated
+                    cursor.execute(sql_statement, list(data.values()))
+                    connection.commit()
+                    if data is None:
+                        return None
+                    return data
         except Exception as e:
             print(f"Error updating data: {e}")
-            return False
+            return None
 
-    def delete(self, database_name: str, collection_name: str, key_field: str, key_value: str) -> bool:
+    def delete(self, table: str, conditions: dict) -> bool:
         """
         Delete a row from the specified table.
 
-        :param database_name: Name of the database.
-        :param collection_name: Name of the table.
-        :param key_field: Key field for identifying the row to delete.
-        :param key_value: Value of the key field.
+        :param table: name of the data table
+        :param conditions: a dictionary containing key-value pair for filtering
         :return: True if the row was deleted, False otherwise.
         """
         try:
-            sql_statement = f"DELETE FROM {database_name}.{collection_name} WHERE {key_field}=%s"
+            filter_clause = " AND ".join([f"{key}={value}" for key, value in conditions.items()])
+            sql_statement = f"DELETE FROM `{table}` WHERE {filter_clause}"
 
             with self._get_connection() as connection:
                 with connection.cursor() as cursor:
-                    cursor.execute(sql_statement, [key_value])
+                    # To inspect database content for debugging
+                    # print("-------CHECKPOINT----------")
+                    # cursor.execute(f"SELECT * FROM `{table}`")
+                    # rows = cursor.fetchall()
+                    # if rows:
+                    #     print("Existing records in the table:")
+                    #     for row in rows:
+                    #         print(row)
+                    # else:
+                    #     print("The table is empty.")
+                    cursor.execute(sql_statement)
                     return cursor.rowcount > 0  # Check if any rows were deleted
         except Exception as e:
             print(f"Error deleting data: {e}")
