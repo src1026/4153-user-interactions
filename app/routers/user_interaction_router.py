@@ -21,7 +21,7 @@ async def register_user(user_data: dict):
         send_email(
             to_email=user["email"],  # Dynamically use the user's email
             subject="Welcome to the Recipe App",
-            message=f"Hi {user['name']},\n\nYour registration was successful! Thank you for joining our Recipe App."
+            message=f"Hi {user.get('name', 'User')},\n\nYour registration was successful! Thank you for joining our Recipe App."
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error sending email: {e}")
