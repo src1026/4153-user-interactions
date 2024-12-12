@@ -13,3 +13,6 @@ starlette==0.38.4
 typing_extensions==4.12.2
 uvicorn==0.30.6
 sqlalchemy
+python-jose
+google-auth
+requests
