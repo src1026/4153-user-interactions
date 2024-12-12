@@ -102,8 +102,9 @@ async def send_welcome_email(email: str):
     msg["From"] = "no-reply@example.com"
     msg["To"] = email
 
-    with smtplib.SMTP("smtp.example.com", 587) as server:
+    with smtplib.SMTP("smtp.example.com", 587) as server: # Need to replace actual sender email info in this code block
         server.starttls()
+        print("Email connection is set up!")
         # server.login("your_email@example.com", "your_password")
         # server.send_message(msg)
         print(f"Email sent to {email}")
@@ -113,7 +114,7 @@ async def create_user(user_data: User):
     try:
         user = resource.create_user(user_data.dict())
         # Run the task in background
-        send_welcome_email(user.email)
+        asyncio.create_task(send_welcome_email(user.email))
         return JSONResponse(
             content={
                 "message": "User added successfully",
