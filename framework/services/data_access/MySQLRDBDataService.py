@@ -74,6 +74,16 @@ class MySQLRDBDataService(DataDataService):
 
             with self._get_connection() as connection:
                 with connection.cursor() as cursor:
+                    # # Inspect table content
+                    # print("----------CHECKPOINT----------")
+                    # cursor.execute(f"SELECT * FROM `{table}`")
+                    # rows = cursor.fetchall()
+                    # if rows:
+                    #     print("Existing records in the table:")
+                    #     for row in rows:
+                    #         print(row)  # Print each row as a dictionary
+                    # else:
+                    #     print("The table is empty.")
                     cursor.execute(sql_check_duplicate, list(data.values()))
                     result = cursor.fetchall()
                     if len(result) > 0:

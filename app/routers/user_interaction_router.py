@@ -1,4 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, status, Query
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from app.resources.user_interaction_resource import UserInteractionResource
 from app.models.user_actions import Like, Comment, Follow
 from app.services.service_factory import ServiceFactory
@@ -46,11 +48,14 @@ async def get_comment(comment_id: int):
 @router.post("/comment/", status_code=201)
 async def add_comment(comment_data: Comment):
     comment = resource.add_comment(comment_data.dict())
-    return {
-        "message": "Comment added successfully",
-        "data": comment,
-        "Location": f"/comment/{comment.comment_id}"
-    }
+    return JSONResponse(
+        content={
+            "message": "Comment added successfully",
+            "data": jsonable_encoder(comment),
+        },
+        status_code=201,
+        headers={"Link": f"/comment/{comment.comment_id}; rel='self'"}
+    )
 
 @router.put("/comment/{comment_id}")
 async def update_comment(comment_id: int, updated_data: Comment):
@@ -66,7 +71,7 @@ async def delete_comment(comment_id: int):
         raise HTTPException(status_code=404, detail="Comment not found")
     return {"message": "Comment deleted successfully"}
 
-@router.post("/follow/", status_code=201)
+@router.post("/follow/", status_code=202)
 async def follow_user(follow_data: Follow):
     follow = resource.follow_user(follow_data.dict())
     if not follow:
@@ -90,11 +95,14 @@ async def unfollow_user(follower_id: int, following_id: int):
 async def create_user(user_data: User):
     try:
         user = resource.create_user(user_data.dict())
-        return {
-            "message": "User created successfully",
-            "data": user,
-            "Location": f"/users/{user.user_id}"
-        }
+        return JSONResponse(
+            content={
+                "message": "User added successfully",
+                "data": jsonable_encoder(user),
+            },
+            status_code=201,
+            headers={"Link": f"/users/{user.user_id}; rel='self'"}
+        )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
