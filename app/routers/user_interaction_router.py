@@ -8,11 +8,30 @@ from app.resources.user_interaction_resource import UserInteractionResource
 from app.models.user_actions import Like, Comment, Follow
 from app.services.service_factory import ServiceFactory
 from app.models.user_actions import User
+from app.services.email_service import send_email
+from app.services.user_interaction_service import UserInteractionDataService
 
 def data_service_factory():
     return ServiceFactory.get_service("UserInteractionDataService")
 resource = UserInteractionResource(data_service_factory=data_service_factory)
 router = APIRouter()
+
+@router.post("/register")
+async def register_user(user_data: dict):
+    service = ServiceFactory.get_service("UserInteractionDataService")
+    user = service.register_user(user_data)
+
+    # send welcome email to the registered user
+    try:
+        send_email(
+            to_email=user["email"],  # Dynamically use the user's email
+            subject="Welcome to the Recipe App",
+            message=f"Hi {user.get('name', 'User')},\n\nYour registration was successful! Thank you for joining our Recipe App."
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error sending email: {e}")
+
+    return {"message": "User registered successfully", "user": user}
 
 @router.post("/like/", status_code=201)
 async def like_recipe(like_data: Like):

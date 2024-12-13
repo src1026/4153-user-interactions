@@ -58,40 +58,26 @@ class MySQLRDBDataService(DataDataService):
     def insert(self, table: str, data: dict) -> dict:
         """
         Insert a new row into the specified table.
-
-        :param table: The name of the table to insert data into.
-        :param data: A dictionary of column names and their corresponding values.
-        :return: The inserted data with the generated primary key (if any).
         """
         try:
-            # Avoid inserting duplicates (especially in the case of following relations)
-            filter_clause = " AND ".join([f"{key}=%s" for key in data.keys()])
-            sql_check_duplicate = f"SELECT * FROM `{table}` WHERE {filter_clause}"
-
             columns = ", ".join(data.keys())
             placeholders = ", ".join(["%s"] * len(data))
-            sql_statement = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
+            sql_statement = f"INSERT INTO `{table}` ({columns}) VALUES ({placeholders})"
+
+            values = list(data.values())
 
             with self._get_connection() as connection:
                 with connection.cursor() as cursor:
-                    # # Inspect table content
-                    # print("----------CHECKPOINT----------")
-                    # cursor.execute(f"SELECT * FROM `{table}`")
-                    # rows = cursor.fetchall()
-                    # if rows:
-                    #     print("Existing records in the table:")
-                    #     for row in rows:
-                    #         print(row)  # Print each row as a dictionary
-                    # else:
-                    #     print("The table is empty.")
-                    cursor.execute(sql_check_duplicate, list(data.values()))
-                    result = cursor.fetchall()
-                    if len(result) > 0:
-                        print("Duplicated data entry found.")
-                        return None
-                    cursor.execute(sql_statement, list(data.values()))
-                    inserted_id = cursor.lastrowid  # Get the ID of the newly inserted row
-            return {"id": inserted_id, **data}
+                    try:
+                        cursor.execute(sql_statement, values)
+                        inserted_id = cursor.lastrowid
+                        connection.commit()
+                        return {"id": inserted_id, **data}
+                    except pymysql.err.IntegrityError as e:
+                        if "Duplicate entry" in str(e):
+                            print("Duplicated data entry found.")
+                            return {"error": "Duplicate entry", "data": data}
+                        raise e
         except Exception as e:
             print(f"Error inserting data into table {table}: {e}")
             return None
