@@ -31,6 +31,18 @@ async def register_user(user_data: dict):
 @router.post("/like/", status_code=201)
 async def like_recipe(like_data: Like):
     like = resource.add_like(like_data.dict())
+
+    # Send email notification to the user who received the like
+    try:
+        user_email = resource.get_user_email(like_data.user_id)
+        send_email(
+            to_email=user_email,
+            subject="New like on your recipe",
+            message=f"Someone liked your recipe! Check it out: https://your-app.com/recipes/{like_data.recipe_id}"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error sending email: {e}")
+
     return {
         "message": "Recipe liked successfully",
         "data": like,
