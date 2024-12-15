@@ -22,6 +22,8 @@ async def root():
 @app.middleware("http")
 async def validate_and_propagate_token(request: Request, call_next):
     token = request.headers.get("Authorization")
+    if token and token.startswith("Bearer "):
+        token = token.split(" ")[1]
     if token:
         try:
             # Validate token
