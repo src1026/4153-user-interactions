@@ -5,9 +5,11 @@ from app.routers import user_interaction_router
 from app.routers import auth
 from app.services.auth_service import verify_jwt
 from fastapi.responses import JSONResponse
+from app.routers.graphql_router import graphql_router
 
 app = FastAPI()
 app.include_router(auth.router)
+app.include_router(graphql_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*']

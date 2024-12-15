@@ -1,0 +1,27 @@
+type Like {
+    user_id: Int!
+    recipe_id: Int!
+}
+
+type Comment {
+    comment_id: Int
+    user_id: Int!
+    recipe_id: Int!
+    content: String!
+    created_at: String
+    updated_at: String
+}
+
+type Follow {
+    follower_id: Int!
+    following_id: Int!
+}
+
+type User {
+    user_id: Int
+    email: String!
+    profile_pic: String
+    ranking: Int
+    created_at: String
+    updated_at: String
+}
