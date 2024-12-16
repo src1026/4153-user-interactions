@@ -101,7 +101,7 @@ async def get_comment(comment_id: int):
 
     if isinstance(result, dict):
         result = Comment(**result)
-
+        
     # # HATEOAS
     # result.links = [
     #     {"rel": "self", "href": f"/comment/{comment_id}", "method": "GET"},
