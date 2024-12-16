@@ -5,17 +5,19 @@ from app.routers import user_interaction_router
 from app.routers import auth
 from app.services.auth_service import verify_jwt
 from fastapi.responses import JSONResponse
-from app.routers.graphql_router import graphql_router
+from app.routers.schema import graphql_router
+# from starlette_graphene3 import GraphQLApp
+# from app.routers.schema import schema
 
 app = FastAPI()
 app.include_router(auth.router)
+app.include_router(graphql_router)
 app.include_router(graphql_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*']
 )
 app.include_router(user_interaction_router.router)
-
 
 @app.get("/")
 async def root():
