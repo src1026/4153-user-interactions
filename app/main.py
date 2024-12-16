@@ -6,8 +6,6 @@ from app.routers import auth
 from app.services.auth_service import verify_jwt
 from fastapi.responses import JSONResponse
 from app.routers.schema import graphql_router
-# from starlette_graphene3 import GraphQLApp
-# from app.routers.schema import schema
 
 app = FastAPI()
 app.include_router(auth.router)

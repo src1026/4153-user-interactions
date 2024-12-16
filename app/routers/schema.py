@@ -1,10 +1,9 @@
 from graphene import ObjectType, String, Int, Field, Schema, List
 from sqlalchemy import create_engine, text
-from app.routers.model import User
+from app.routers.model import User, Like, Comment, Follow
 from sqlalchemy.orm import sessionmaker
 from starlette_graphene3 import GraphQLApp
 from fastapi import APIRouter
-
 # DB
 context = dict(
                 user="jigglypuff7",
@@ -35,6 +34,52 @@ def test_db_connection():
             session.close()
 test_db_connection()
 
+class LikeType(ObjectType):
+    user_id=Int()
+    recipe_id=Int()
+
+    def resolve_user_id(like, info):
+        return like.user_id
+    
+    def resolve_recipe_id(like, info):
+        return like.recipe_id
+    
+class CommentType(ObjectType):
+    comment_id=Int()
+    user_id=Int()
+    recupe_id=Int()
+    content=String()
+    created_at=String()
+    updated_at=String()
+
+    def resolve_comment_id(comment, info):
+        return comment.comment_id
+    
+    def resolve_user_id(comment, info):
+        return comment.user_id
+    
+    def resolve_recipe_id(comment, info):
+        return comment.recupe_id
+    
+    def resolve_content(comment, info):
+        return comment.content
+    
+    def resolve_created_at(comment, info):
+        return comment.created_at
+    
+    def resolve_updated_at(comment, info):
+        return comment.updated_at
+    
+class FollowType(ObjectType):
+    follower_id=Int()
+    following_id=Int()
+
+    def resolve_follower_id(follow, info):
+        return follow.follower_id
+    
+    def resolve_following_id(follow, info):
+        return follow.following_id
+
 class UserType(ObjectType):
     user_id=Int()
     email=String()
@@ -61,6 +106,7 @@ class UserType(ObjectType):
     
     def resolve_updated_at(person,info):
         return person.updated_at
+    
 
 class Query(ObjectType):
     allUser=List(UserType)
@@ -77,6 +123,57 @@ class Query(ObjectType):
         session = SessionLocal()
         try:
             return session.query(User).filter(User.user_id == userId).first()
+        finally:
+            session.close()
+
+    allLike=List(LikeType)
+    like=Field(LikeType,recipeId=Int())
+
+    def resolve_allLike(root, info):
+        session = SessionLocal()
+        try:
+            return session.query(Like).all()
+        finally:
+            session.close()
+    
+    def resolve_like(root, info, recipeId):
+        session = SessionLocal()
+        try:
+            return session.query(Like).filter(Like.recipe_id == recipeId).all()
+        finally:
+            session.close()
+
+    allComment=List(CommentType)
+    comment=Field(CommentType,recipeId=Int())
+
+    def resolve_allComment(root, info):
+        session = SessionLocal()
+        try:
+            return session.query(Comment).all()
+        finally:
+            session.close()
+
+    def resolve_comment(root, info, recipeId):
+        session = SessionLocal()
+        try:
+            return session.query(Comment).filter(Comment.recipe_id == recipeId).all()
+        finally:
+            session.close()
+
+    allFollow=List(FollowType)
+    follow=Field(FollowType,followingId=Int())
+
+    def resolve_allFollow(root, info):
+        session = SessionLocal()
+        try:
+            return session.query(Follow).all()
+        finally:
+            session.close()
+
+    def resolve_follow(root, info, followingId):
+        session = SessionLocal()
+        try:
+            return session.query(Follow).filter(Follow.following_id == followingId).all()
         finally:
             session.close()
 
