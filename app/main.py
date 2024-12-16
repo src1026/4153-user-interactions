@@ -6,7 +6,10 @@ from app.routers import auth
 from app.services.auth_service import verify_jwt
 from fastapi.responses import JSONResponse
 
-app = FastAPI()
+app = FastAPI(
+    title="User Interaction API",
+    description="API for managing user interactions with other users and recipes"
+)
 app.include_router(auth.router)
 app.add_middleware(
     CORSMiddleware,
